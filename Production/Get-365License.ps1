@@ -1,9 +1,35 @@
 
 function Get-365License {
+
+    <#
+    .SYNOPSIS
+    Returns the status of a user's licenses as well as the licenses assigned to the user. 
+    .DESCRIPTION
+    This cmdlet appends two fields to the Microsoft.Online.Administration.User objects obtained from the Get-MsolUser command.
+    The fields LicenseStatus and ActiveLicenses contain information about the status of licenses (active vs. not active) as well
+    as the licenses that are active.
+    .PARAMETER $UserPrincipalName
+    Accepts an array of userprincipalnames (John.Doe@contoso.com). The groups are returned for these users. Defining this parameter
+    will send a Get-Msol user query for each UserPrincipal name and is slow. It is recommended that the user use the 'All' switch
+    when trying to get MFA for the entire tenant as it is much faster
+    .PARAMETER $All
+    This switch queries the entire Tenant
+    .EXAMPLE
+    Get-365License -UserPrincipalName John.Doe@contoso.com
+    .EXAMPLE
+    Get-365License -UserPrincipalName (Get-MsolUser).UserPrincipalName
+    .EXAMPLE
+    Get-365License -All
+    .NOTES
+    Automatically installs the msonline module if it is not already present
+    #>
+
     [CmdletBinding()]
     param (
-        [Parameter(ValueFromPipeline=$True, ValueFromPipelineByPropertyName=$True, Mandatory=$True)]
-        [String[]] $UserPrincipalName
+        [Parameter(ValueFromPipeline=$True, ValueFromPipelineByPropertyName=$True, ParameterSetName = 'UserPrincipalName')]
+        [String[]] $UserPrincipalName,
+        [Parameter(ValueFromPipeline=$true, ParameterSetName = 'Tenant')]
+        [Switch] $All
     )
 
     BEGIN {
@@ -46,28 +72,49 @@ function Get-365License {
 
     PROCESS {
 
-        foreach ($user in $UserPrincipalName){
-            $licenses = (Get-MsolUser -UserPrincipalName $user).licenseassignmentdetails
+        $licenseCheckAccounts = @()
 
-            if ($licenses.count -ne 0){
-        
-                foreach ($license in $licenses){
-                    $obj = [PSCustomObject]@{
-                        Name = $user
-                        License = $license
-                    }
-                
-                    $obj
+        if ($PSBoundParameters.ContainsKey('UserPrincipalName')){
+            Foreach ($user in $UserPrincipalName){
+                try {
+                    $user = Get-MsolUser -UserPrincipalName $user -ErrorAction Stop
+                    $licenseCheckAccounts += $user
+                } catch {
+                    Write-Verbose "$user not found"
                 }
-                
-            } else {
-                $obj = [PSCustomObject]@{
-                    Name = $user
-                    License='NO LICENSES'
-                }
-            
-                $obj
             }
+        } 
+        
+        elseif ($PSBoundParameters.ContainsKey('All')){
+            try {
+                $licenseCheckAccounts = Get-MsolUser -All
+            } catch {
+                Write-Verbose "Unable to get MsolUsers"
+                exit
+            }
+        }
+
+        foreach ($account in $licenseCheckAccounts){
+
+            $user = $account.UserPrincipalName
+            $licenses = $account.licenseassignmentdetails
+
+            if ($licenses.count -eq 0){
+                Write-Verbose -Message "No active licenses found for $user"
+                $account | Add-Member -NotePropertyName 'LicenseStatus' -NotePropertyValue 'Not Active'
+            } else {
+                Write-Verbose -Message "Active licenses found for $user"
+                $account | Add-Member -NotePropertyName 'LicenseStatus' -NotePropertyValue 'Active'
+            }
+
+            $active_licenses = @()
+            foreach ($license in $licenses){
+                Write-Verbose -Message "$license active for $user"
+                $active_licenses += $license
+            }
+
+            $account | Add-Member -NotePropertyName 'ActiveLicenses' -NotePropertyValue $active_licenses
+            $account
         }
     }
 }
