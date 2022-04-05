@@ -51,7 +51,7 @@ function Get-LayeredGroupMembers {
             }
         }
 
-        $members
+        $members | Select-object Name,Title
     }
 
     End {}

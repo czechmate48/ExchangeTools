@@ -1,0 +1,18 @@
+[System.Collections.ArrayList] $uniqueTitles = @()
+
+foreach ($title in $titles){
+    foreach ($uniqueTitle in $uniqueTitles){
+        if ($title -like $uniqueTitle){
+            $add = $false
+            break
+        }
+    }
+
+    if ($add -eq $true){
+        $uniqueTitles.Add($title) | Out-Null
+    } else {
+        $add = $true
+    }
+}
+
+$uniqueTitles
