@@ -1,5 +1,5 @@
 
-function Get-365License {
+function Get-ETM365License {
 
     <#
     .SYNOPSIS
@@ -15,11 +15,11 @@ function Get-365License {
     .PARAMETER $All
     This switch queries the entire Tenant
     .EXAMPLE
-    Get-365License -UserPrincipalName John.Doe@contoso.com
+    Get-ETM365License -UserPrincipalName John.Doe@contoso.com
     .EXAMPLE
-    Get-365License -UserPrincipalName (Get-MsolUser).UserPrincipalName
+    Get-ETM365License -UserPrincipalName (Get-MsolUser).UserPrincipalName
     .EXAMPLE
-    Get-365License -All
+    Get-ETM365License -All
     .NOTES
     Automatically installs the msonline module if it is not already present
     #>
