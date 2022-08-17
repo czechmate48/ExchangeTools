@@ -1,4 +1,4 @@
-function Get-HOPUserExchangeGroup{
+function Get-ETUserExchangeGroup{
 <#
 .SYNOPSIS
 Returns the user's exchange group memberships
