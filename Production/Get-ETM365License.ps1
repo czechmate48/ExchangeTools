@@ -44,8 +44,7 @@ function Get-ETM365License {
                 Install-Module -name 'msonline' -Force -ErrorAction Stop
             } Catch {
                 Write-Verbose -Message "Unable to install msonline"
-                Write-Error -Message "Cannot install msonline module. Exiting cmdlet."
-                exit
+                Write-Error -Message "Cannot install msonline module."
             } #Try
         } else {
             Write-Verbose -Message "msonline module is installed"
@@ -64,8 +63,7 @@ function Get-ETM365License {
                 Connect-msolservice -ErrorAction Stop
             } Catch {
                 Write-Verbose -Message "Unable to connect to msolservice"
-                Write-Error -Message "Cannot connect to msonline. Exiting cmdlet."
-                exit
+                Write-Error -Message "Cannot connect to msonline."
             } #Try    
         } #Try
     } #Begin
@@ -90,7 +88,6 @@ function Get-ETM365License {
                 $licenseCheckAccounts = Get-MsolUser -All
             } catch {
                 Write-Verbose "Unable to get MsolUsers"
-                exit
             }
         }
 
